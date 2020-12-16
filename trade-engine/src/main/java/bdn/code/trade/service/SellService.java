@@ -1,5 +1,6 @@
 package bdn.code.trade.service;
 
+import bdn.code.trade.exception.TradeException;
 import bdn.code.trade.message.ApiMessages;
 import bdn.code.trade.model.Client;
 import bdn.code.trade.model.ClientOrder;
@@ -26,7 +27,7 @@ public class SellService implements OrderService {
 
         if (!clientHasEnoughQuantity(client.getQuantity(), clientOrder.getQuantity())) {
 
-            throw new RuntimeException(ApiMessages.CLIENT_HAS_NOT_ENOUGH_QUANTITY.getMessage());
+            throw new TradeException(ApiMessages.CLIENT_HAS_NOT_ENOUGH_QUANTITY.getMessage());
         }
 
         int totalQuantity = clientOrder.getQuantity();
@@ -47,7 +48,7 @@ public class SellService implements OrderService {
 
         if (totalQuantity != 0) {
 
-            throw new RuntimeException(ApiMessages.PRODUCT_HAS_NOT_ENOUGH_QUANTITY.getMessage());
+            throw new TradeException(ApiMessages.PRODUCT_HAS_NOT_ENOUGH_QUANTITY.getMessage());
         }
 
         int quantity = client.getQuantity() - clientOrder.getQuantity();
@@ -55,14 +56,14 @@ public class SellService implements OrderService {
         boolean updateClient = clientService.updateClient(client, amount, quantity);
         if (!updateClient) {
 
-            throw new RuntimeException(ApiMessages.CLIENT_NOT_UPDATED.getMessage());
+            throw new TradeException(ApiMessages.CLIENT_NOT_UPDATED.getMessage());
         }
 
         productList.removeIf(p -> !modifiedProductId.contains(p.getId()));
         boolean updateProducts = productService.updateProducts(productList);
         if (!updateProducts) {
 
-            throw new RuntimeException(ApiMessages.PRODUCT_NOT_UPDATED.getMessage());
+            throw new TradeException(ApiMessages.PRODUCT_NOT_UPDATED.getMessage());
         }
 
         return new TradeOrder.Builder()

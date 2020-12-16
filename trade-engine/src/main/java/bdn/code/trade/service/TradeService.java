@@ -1,6 +1,6 @@
 package bdn.code.trade.service;
 
-import bdn.code.trade.exception.NotFoundException;
+import bdn.code.trade.exception.TradeException;
 import bdn.code.trade.message.ApiMessages;
 import bdn.code.trade.model.*;
 import bdn.code.trade.repository.ClientOrderDao;
@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class TradeService {
@@ -31,28 +30,26 @@ public class TradeService {
 
         clientOrderDao.save(clientOrder);
 
-        Client client = Optional.of(clientService.getClient(clientOrder.getClientId()))
-                .orElseThrow(() -> new NotFoundException(String.format(
-                        ApiMessages.CLIENT_NOT_FOUND.getMessage(),clientOrder.getClientId())));
+        Client client = clientService.getClient(clientOrder.getClientId());
 
-        List<Product> productList = Optional.of(productService.getProducts(
-                clientOrder.getTradeType(),
-                client.getCurrency(),
-                clientOrder.getMarket()))
-                .orElseThrow(() -> new NotFoundException(String.format(
-                        ApiMessages.PRODUCT_NOT_FOUND.getMessage(),clientOrder.getMarket())));
+        TradeType tradeType = clientOrder.getTradeType();
+
+        List<Product> productList = productService.getProducts(
+                tradeType,
+                clientOrder.getMarket(),
+                client.getCurrency());
 
         TradeOrder tradeOrder;
 
-        if (clientOrder.getTradeType() == TradeType.BUY) {
+        if (tradeType == TradeType.BUY) {
 
             tradeOrder = buyService.processOrder(clientOrder, client, productList);
-        } else if (clientOrder.getTradeType() == TradeType.SELL) {
+        } else if (tradeType == TradeType.SELL) {
 
             tradeOrder = sellService.processOrder(clientOrder, client, productList);
         } else {
 
-            throw new RuntimeException(ApiMessages.INTERNAL_SERVER_ERROR.getMessage());
+            throw new TradeException(ApiMessages.UNKNOWN_TRADE.getMessage());
         }
 
         return tradeDao.save(tradeOrder);

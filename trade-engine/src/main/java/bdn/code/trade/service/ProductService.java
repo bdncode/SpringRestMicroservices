@@ -1,6 +1,7 @@
 package bdn.code.trade.service;
 
 import bdn.code.trade.controller.ProductController;
+import bdn.code.trade.exception.TradeException;
 import bdn.code.trade.message.ApiMessages;
 import bdn.code.trade.model.Currency;
 import bdn.code.trade.model.Market;
@@ -19,9 +20,9 @@ public class ProductService {
     @Autowired
     ProductController productController;
 
-    public List<Product> getProducts(TradeType tradeType, Currency currency, Market market) {
+    public List<Product> getProducts(TradeType tradeType, Market market, Currency currency) {
 
-        List<Product> productList = productController.getProducts(tradeType, currency, market);
+        List<Product> productList = productController.getProducts(tradeType, market, currency);
 
         if (tradeType == TradeType.BUY) {
 
@@ -35,7 +36,8 @@ public class ProductService {
                     .sorted(Comparator.comparing(Product::getPrice).reversed())
                     .collect(Collectors.toList());
         } else {
-            throw new RuntimeException(String.format(ApiMessages.UNKNOWN_TRADE.getMessage(), tradeType.name()));
+
+            throw new TradeException(ApiMessages.UNKNOWN_TRADE.getMessage());
         }
     }
 

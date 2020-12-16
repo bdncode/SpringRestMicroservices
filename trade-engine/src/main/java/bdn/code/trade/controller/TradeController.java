@@ -1,5 +1,7 @@
 package bdn.code.trade.controller;
 
+import bdn.code.trade.exception.NotFoundException;
+import bdn.code.trade.exception.TradeException;
 import bdn.code.trade.model.ClientOrder;
 import bdn.code.trade.model.TradeOrder;
 import bdn.code.trade.service.TradeService;
@@ -23,21 +25,24 @@ public class TradeController {
     TradeService tradeService;
 
     @PostMapping(value = CREATE_TRADE_ORDER)
-    public ResponseEntity<TradeOrder> createTradeOrder(@RequestBody ClientOrder clientOrder) {
+    public ResponseEntity<TradeOrder> createTradeOrder(@RequestBody ClientOrder clientOrder) throws Exception {
 
         TradeOrder tradeOrder;
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         try {
+
             tradeOrder = tradeService.createTradeOrder(clientOrder);
-        } catch (Exception e) {
-            return new ResponseEntity<>(headers, HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (NotFoundException notFoundException) {
+
+            throw new NotFoundException(notFoundException.getMessage());
+        } catch (TradeException tradeException) {
+
+            throw new TradeException(tradeException.getMessage());
+        } catch (Exception defaultException) {
+
+            throw new Exception(defaultException.getMessage());
         }
         return new ResponseEntity<>(tradeOrder ,headers, HttpStatus.OK);
-    }
-
-    @PostMapping(value = "/sell")
-    public void postSell(@RequestBody ClientOrder trade) {
-
     }
 }

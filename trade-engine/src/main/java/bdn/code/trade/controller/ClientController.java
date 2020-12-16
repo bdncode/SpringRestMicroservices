@@ -1,5 +1,8 @@
 package bdn.code.trade.controller;
 
+import bdn.code.trade.exception.NotFoundException;
+import bdn.code.trade.exception.TradeException;
+import bdn.code.trade.message.ApiMessages;
 import bdn.code.trade.model.Client;
 import bdn.code.trade.model.ProductList;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,25 +25,42 @@ public class ClientController {
 
     public Client getClient(long id) {
 
-        return webClientBuilder.baseUrl(CLIENT_SERVICE_URL)
-                .build()
-                .get()
-                .uri(String.valueOf(id))
-                .retrieve()
-                .bodyToMono(Client.class)
-                .block();
+        Client client = null;
+        try {
+
+            client = webClientBuilder.baseUrl(CLIENT_SERVICE_URL)
+                    .build()
+                    .get()
+                    .uri(String.valueOf(id))
+                    .retrieve()
+                    .bodyToMono(Client.class)
+                    .block();
+        } catch (Exception e) {
+
+            throw new NotFoundException(ApiMessages.CLIENT_NOT_FOUND.getMessage());
+        }
+        return client;
     }
 
     public boolean updateClient(Client client) {
 
-        return Objects.equals(Objects.requireNonNull(webClientBuilder.baseUrl(CLIENT_SERVICE_URL)
-                .build()
-                .put()
-                .uri(String.valueOf(client.getId()))
-                .body(Mono.just(client), Client.class)
-                .retrieve()
-                .toEntity(String.class)
-                .block())
-                .getStatusCode(), HttpStatus.OK);
+        boolean updated = false;
+        try {
+
+            updated = Objects.requireNonNull(webClientBuilder
+                    .baseUrl(CLIENT_SERVICE_URL)
+                    .build()
+                    .put()
+                    .uri(String.valueOf(client.getId()))
+                    .body(Mono.just(client), Client.class)
+                    .retrieve()
+                    .toEntity(String.class)
+                    .block())
+                    .getStatusCode() == HttpStatus.OK;
+        } catch (Exception e) {
+
+            throw new TradeException(ApiMessages.CLIENT_NOT_UPDATED.getMessage());
+        }
+        return updated;
     }
 }
