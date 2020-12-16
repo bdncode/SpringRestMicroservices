@@ -70,6 +70,6 @@ public class BuyService implements OrderService {
 
     private boolean clientHasEnoughAmount(BigDecimal clientAmount, BigDecimal price) {
 
-        return clientAmount.compareTo(price) != -1;
+        return clientAmount.compareTo(price) > -1;
     }
 }
